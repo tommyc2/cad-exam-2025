@@ -14,8 +14,9 @@ export const handler: Handler = async (event) => {
 
   for (const record of event.Records) {
     const bidItem = JSON.parse(record.body) as Bid;
+    const bidItemId = bidItem.bidId || undefined;
 
-
+    if (bidItem.bidId == undefined){
     const dbItem: DBBid = {
       ...bidItem,
     timeStamp: Date().toString(),
@@ -29,7 +30,7 @@ export const handler: Handler = async (event) => {
         },
       })
     );
-
+    }
   }
 
 };

@@ -3,12 +3,35 @@ import { Handler } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
+  PutCommand,
 } from "@aws-sdk/lib-dynamodb";
+import { Bid, DBBid } from "/opt/types";
 
 const ddbDocClient = createDDbDocClient();
 
 export const handler: Handler = async (event) => {
   console.log("Event ", JSON.stringify(event));
+
+  for (const record of event.Records) {
+    const bidItem = JSON.parse(record.body) as Bid;
+
+
+    const dbItem: DBBid = {
+      ...bidItem,
+    timeStamp: Date().toString(),
+    }
+
+    await ddbDocClient.send(
+      new PutCommand({
+        TableName: process.env.TABLE_NAME,
+        Item: {
+          ...dbItem,
+        },
+      })
+    );
+
+  }
+
 };
 
 function createDDbDocClient() {

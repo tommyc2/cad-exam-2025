@@ -56,7 +56,7 @@ export class AuctionStack extends cdk.Stack {
       deadLetterQueue: {
         queue: rejectedStockQueue,
         maxReceiveCount: 1
- }
+    }
     });
 
     const topic = new sns.Topic(this, "AuctionTopic", {
@@ -92,6 +92,7 @@ export class AuctionStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(15),
       memorySize: 128,
       environment: {
+        TABLE_NAME: bids.tableName,
         REGION: "eu-west-1",
       },
     });
@@ -122,11 +123,19 @@ export class AuctionStack extends cdk.Stack {
         maxBatchingWindow: cdk.Duration.seconds(10),
       })
     );
+
+    lambdaC.addEventSource(
+      new events.SqsEventSource(queue, {
+        batchSize: 5,
+        maxBatchingWindow: cdk.Duration.seconds(6),
+      })
+    );
     
 
     // Permissions
 
     auctioStock.grantReadWriteData(lambdaA);
+    bids.grantReadWriteData(lambdaC);
     
     // Output
 

@@ -47,8 +47,16 @@ export class AuctionStack extends cdk.Stack {
 
     // Integration infrastructure
 
+    const rejectedStockQueue = new sqs.Queue(this, "RejectedStockMessagesQ", {
+      receiveMessageWaitTime: cdk.Duration.seconds(10),
+    });
+
     const queue = new sqs.Queue(this, "AuctionQ", {
       receiveMessageWaitTime: cdk.Duration.seconds(10),
+      deadLetterQueue: {
+        queue: rejectedStockQueue,
+        maxReceiveCount: 1
+ }
     });
 
     const topic = new sns.Topic(this, "AuctionTopic", {
@@ -107,6 +115,14 @@ export class AuctionStack extends cdk.Stack {
         maxBatchingWindow: cdk.Duration.seconds(6),
       })
     );
+
+    lambdaB.addEventSource(
+      new events.SqsEventSource(rejectedStockQueue, {
+        batchSize: 5,
+        maxBatchingWindow: cdk.Duration.seconds(10),
+      })
+    );
+    
 
     // Permissions
 

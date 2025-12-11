@@ -13,6 +13,13 @@ export const handler: SQSHandler = async (event) => {
     const auctionItem = JSON.parse(record.body) as AuctionItem;
     const attributes = record.messageAttributes.auction_type.stringValue as AuctionType;
 
+    const marketValue = auctionItem.marketValue;
+    const minimumPrice = auctionItem.minimumPrice;
+
+    if (marketValue < minimumPrice) {
+      throw new Error("Item can't be written to DB, market Value less than minimum Price");
+    }
+    else {
     const dbItem: DBAuctionItem = {
       ...auctionItem,
       auctionType: attributes,
@@ -25,6 +32,9 @@ export const handler: SQSHandler = async (event) => {
         },
       })
     );
+    }
+
+
   }
 };
 
